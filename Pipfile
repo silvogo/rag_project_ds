@@ -7,6 +7,9 @@ name = "pypi"
 langchain-openai = "*"
 langchain-community = "*"
 langchainhub = "*"
+faiss-cpu = "*"
+llama-index = "*"
+llama-index-embeddings-huggingface = "*"
 
 [dev-packages]
 
