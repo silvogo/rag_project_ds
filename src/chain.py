@@ -9,8 +9,7 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 
 
-def create_chain(vector_store):
-    retriever = vector_store.as_retriever()
+def create_chain(retriever):
 
     system_prompt = """"
             You are an expert analyzing customer satisfaction data.
@@ -27,7 +26,3 @@ def create_chain(vector_store):
     chain = create_retrieval_chain(retriever=retriever, combine_docs_chain=question_answer_chain)
 
     return chain
-
-
-if __name__ == '__main__':
-    print(load_chain())

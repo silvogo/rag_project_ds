@@ -18,14 +18,14 @@ def split_long_text(text, chunksize, overlap=20):
     return [node.text for node in nodes]
 
 
-def combine_customer_info(customer_name, scores, nps_info, open_responses, token_limit=450):
+def combine_customer_info(customer_name, scores, nps_score, nps_type, open_responses, tokenizer, token_limit=450):
     """
     Combines customer data and splits it into chunks if it exceeds the token limit.
     """
     customer_info = []
 
     # Create the base text with customer name, scores, and NPS score
-    base_text = f"Customer: {customer_name}\nScores:\n{scores}\n{nps_info}\n"
+    base_text = f"Customer: {customer_name}\nScores:\n{scores}\n{nps_score}\n{nps_type}\n"
 
     # Tokenize the base text
     base_tokens = len(tokenizer.encode(base_text, add_special_tokens=False))
