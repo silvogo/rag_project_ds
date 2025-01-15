@@ -3,9 +3,6 @@ from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document as LangchainDocument
 from src.chunking import combine_customer_info, generate_hash
-from uuid import uuid4
-from itertools import chain
-from langchain_huggingface import HuggingFaceEmbeddings
 
 
 def create_vector_store_indexed(embedding_model):
@@ -30,16 +27,18 @@ def create_vector_store_indexed(embedding_model):
     return vector_store
 
 # define the initial load of vector store
-def populate_vector_store(vector_store, source_documents_df, token_limit):
+def populate_vector_store(vector_store, source_documents_df, tokenizer, token_limit):
     # Process customer data
     for _, row in source_documents_df.iterrows():
         customer_name = row["customer"]
         scores = row['scores']
-        nps_info = row['nps_info']
+        nps_score = row['nps_score']
+        nps_type = row['nps_type']
         open_responses = row['open_responses']
 
         # Split customer data into manageable chunks
-        chunks_customer = combine_customer_info(customer_name, scores, nps_info, open_responses, token_limit)
+        chunks_customer = combine_customer_info(customer_name, scores, nps_score, nps_type,
+                                                open_responses, tokenizer=tokenizer, token_limit=token_limit)
 
         # Add metadata and store chunks
         documents = [
