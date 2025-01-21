@@ -4,12 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-langchain-openai = "*"
-langchain-community = "*"
-langchainhub = "*"
-faiss-cpu = "*"
-llama-index = "*"
-llama-index-embeddings-huggingface = "*"
+uvicorn = "*"
+python-multipart = "*"
 
 [dev-packages]
 

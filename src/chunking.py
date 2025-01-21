@@ -1,11 +1,33 @@
 import hashlib
+from typing import List
+
+import pandas as pd
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core import set_global_tokenizer, Document as Llama_Index_Document
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from transformers import AutoTokenizer
+
+
+
+def chunk_customer_info (customer_info_column: pd.Series, chunk_size: int = 1000, chunk_overlap: int = 100) -> pd.Series:
+    """
+        Splits the customer_info column into chunks using Langchain's RecursiveCharacterTextSplitter.
+        Returns a Pandas Series where each row is a list of chunks corresponding to the original row.
+        This function will be tested as new method for chunking
+    """
+    # define splitter for chunking
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len
+    )
+
+    chunks = customer_info_column.apply(lambda customer_info: splitter.split_text(customer_info))
+
+    return pd.Series(chunks)
 
 # Function to split text by sentences using llama index
-def split_long_text(text, chunksize, overlap=20):
+def split_long_text(text, chunksize=1000, overlap=100):
     """
     Splits a long text into smaller chunks using a sentence splitter.
     """
@@ -18,14 +40,26 @@ def split_long_text(text, chunksize, overlap=20):
     return [node.text for node in nodes]
 
 
-def combine_customer_info(customer_name, scores, nps_score, nps_type, open_responses, tokenizer, token_limit=450):
+
+# TO DEPRECATE
+def combine_customer_info(
+    customer_name,
+    scores,
+    nps_score,
+    nps_type,
+    open_responses,
+    tokenizer,
+    token_limit=450,
+):
     """
     Combines customer data and splits it into chunks if it exceeds the token limit.
     """
     customer_info = []
 
     # Create the base text with customer name, scores, and NPS score
-    base_text = f"Customer: {customer_name}\nScores:\n{scores}\n{nps_score}\n{nps_type}\n"
+    base_text = (
+        f"Customer: {customer_name}\nScores:\n{scores}\n{nps_score}\n{nps_type}\n"
+    )
 
     # Tokenize the base text
     base_tokens = len(tokenizer.encode(base_text, add_special_tokens=False))
@@ -57,7 +91,7 @@ def combine_customer_info(customer_name, scores, nps_score, nps_type, open_respo
 
     return customer_info
 
-def generate_hash(customer_name, chunk_index):
-    base_string = f'{customer_name}_chunk_{chunk_index}'
-    return hashlib.md5(base_string.encode()).hexdigest
 
+def generate_hash(customer_name, chunk_index):
+    base_string = f"{customer_name}_chunk_{chunk_index}"
+    return hashlib.md5(base_string.encode()).hexdigest
