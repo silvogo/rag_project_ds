@@ -1,44 +1,41 @@
 import os
 import shutil
-import pandas as pd
+import uuid
 
 import uvicorn
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from starlette.responses import JSONResponse
 
+
 from src.chain import get_chain
-from src.chunking import chunk_customer_info
-from src.data_processing import load_and_clean_data
+from src.chunking import load_and_chunk
 from src.pydantic_models import QueryResponse, QueryInput
-from src.retriever import (
-    create_vector_store_indexed,
-    populate_vector_store,
-)
+from src.retriever import index_document_to_faiss
 
 from dotenv import load_dotenv
-from transformers import AutoTokenizer
-from llama_index.core import set_global_tokenizer
-from langchain_huggingface import HuggingFaceEmbeddings
 import logging
 
 
 # Start logging
 logging.basicConfig(filename="app.log", level=logging.INFO)
 # Initialize FastAPI app
-app = FastAPI(title="RAG Chatbot")
+app = FastAPI(title="RAG Chatbot Insurance Company")
 
 
 @app.post("/chat", response_model=QueryResponse)
 async def chat(query_input: QueryInput) -> QueryResponse:
-    session_id = query_input.session_id
+    # Generate session_id if not provided
+    session_id = query_input.session_id or str(uuid.uuid4())
+    logging.info(f"Session ID: {session_id}, User Query: {query_input.question}")
     # get the chain created using langchain
     rag_chain = get_chain(query_input.model.value)
+    # get answer
     answer = rag_chain.invoke({"input": query_input.question})["answer"]
 
     logging.info(f"Session ID: {session_id}, Chat Response: {answer}")
 
-    return QueryResponse(answer=answer, session_id=session_id, model=query_input.mode)
+    return QueryResponse(answer=answer, session_id=session_id, model=query_input.model)
 
 @app.post("/upload-doc")
 async def upload_documents(file: UploadFile=File(...)):
@@ -54,24 +51,25 @@ async def upload_documents(file: UploadFile=File(...)):
         with open(temp_file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # Load and clean the data
-        df = pd.read_csv(temp_file_path)
-        # Clean the data
-        cleaned_df = load_and_clean_data(df)
+        # Load and chunk the data
+        chunks = load_and_chunk(file_path=temp_file_path, chunk_size=1000, chunk_overlap=100)
 
-        # Chunk the data for FAISS - TO REFINE
-        cleaned_df['chunks'] = chunk_customer_info(cleaned_df['customer_info'])
-        # Add chunks to FAISS - TO REFINE
-        # add_to_faiss(chunks, retriever)
+        # Generate a unique identifier for the file
+        file_id = str(uuid.uuid4())
 
+        # Add chunks to FAISS
+        success = index_document_to_faiss(chunks, file_id)
+
+
+        if success:
+            return JSONResponse(
+                content={"message": f"File {file.filename} has been successfully uploaded and indexed."},
+                status_code=200)
+        else:
+            raise  HTTPException(status_code=500, detail=f"Error processing file: {file.filename}")
+    finally:
         # Clean up the temporary file
         os.remove(temp_file_path)
-
-        return JSONResponse(content={"message": f"File {file.filename} has been successfully uploaded and indexed."}, status_code=200)
-
-    except Exception as e:
-        os.remove(temp_file_path)
-        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 
 @app.get("/")
@@ -80,7 +78,7 @@ async def root():
     Root endpoint for health check
     :return:
     """
-    return {"message": "RAG Chatbot is up and running!"}
+    return {"message": "RAG Chatbot Insurance Company is up and running!"}
 
 
 if __name__ == "__main__":
