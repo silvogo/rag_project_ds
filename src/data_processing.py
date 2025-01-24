@@ -3,6 +3,7 @@ from typing import Dict
 
 import pandas as pd
 from dotenv import load_dotenv
+from langchain_community.document_loaders import CSVLoader
 
 
 def create_customer_info(
@@ -89,3 +90,13 @@ def load_and_clean_data(file_path):
     )
 
     return df_answers
+
+
+if __name__ == '__main__':
+    load_dotenv()
+    file_path = os.getenv('ANSWERS_PATH')
+
+    loader = CSVLoader(file_path= file_path, encoding='utf-8')
+    print("Loading document")
+    document = loader.load()
+

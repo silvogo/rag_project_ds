@@ -1,23 +1,14 @@
-from dotenv import load_dotenv
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-)
+from langchain_core.prompts import ChatPromptTemplate
+
 from langchain_core.output_parsers import StrOutputParser
+from src.retriever import  get_vector_store
 
-from src.retriever import create_vector_store_indexed
-
-# Load environment variables
-# load_dotenv()
-
-
-embedding_function = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en")
-vector_store = create_vector_store_indexed(embedding_function)
+# get vector store
+vector_store = get_vector_store()
+# create a retriever based in vector store
 retriever = vector_store.as_retriever(search_kwargs={"k": 2})
 
 

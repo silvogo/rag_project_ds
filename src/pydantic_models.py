@@ -1,6 +1,7 @@
 from enum import Enum
-from pydantic import BaseModel, Field
+from typing import Optional
 
+from pydantic import BaseModel, Field
 
 class ModelName(str, Enum):
     GPT4_O_MINI = "gpt-4o-mini"
@@ -8,7 +9,7 @@ class ModelName(str, Enum):
 
 class QueryInput(BaseModel):
     question: str
-    session_id: str = Field(default=None)
+    session_id: Optional[str] = None
     model: ModelName = Field(default=ModelName.GPT4_O_MINI)
 
 
