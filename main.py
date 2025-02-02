@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse
 
 from src.chain import get_chain
 from src.chunking import load_and_chunk
-from src.pydantic_models import QueryResponse, QueryInput
+from src.pydantic_models import QueryResponse, QueryInput, DocumentInfo
 from src.retriever import index_document_to_faiss
 
 from dotenv import load_dotenv
@@ -36,6 +36,7 @@ async def chat(query_input: QueryInput) -> QueryResponse:
     logging.info(f"Session ID: {session_id}, Chat Response: {answer}")
 
     return QueryResponse(answer=answer, session_id=session_id, model=query_input.model)
+
 
 @app.post("/upload-doc")
 async def upload_documents(file: UploadFile=File(...)):
@@ -72,13 +73,14 @@ async def upload_documents(file: UploadFile=File(...)):
         os.remove(temp_file_path)
 
 
-@app.get("/")
-async def root():
-    """
-    Root endpoint for health check
-    :return:
-    """
-    return {"message": "RAG Chatbot Insurance Company is up and running!"}
+# @app.get("/list-documents", response_model=list[DocumentInfo])
+# TO DO: FUTURE ENDPOINT TO LIST DOCUMENTS INSERTED
+# async def list_documents():
+#     """
+#     endpoint to list the documents added to the RAG
+#     :return:
+#     """
+#     return
 
 
 if __name__ == "__main__":
