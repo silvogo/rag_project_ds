@@ -8,10 +8,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from starlette.responses import JSONResponse
 
 
-from src.chain import get_chain
-from src.chunking import load_and_chunk
-from src.pydantic_models import QueryResponse, QueryInput, DocumentInfo
-from src.retriever import index_document_to_faiss
+from backend.src.chain import get_chain
+from backend.src.chunking import load_and_chunk
+from backend.src.pydantic_models import QueryResponse, QueryInput
+from backend.src.retriever import index_document_to_faiss
 
 from dotenv import load_dotenv
 import logging
@@ -82,9 +82,13 @@ async def upload_documents(file: UploadFile=File(...)):
 #     """
 #     return
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the RAG Chatbot for MDS Insurance Company API"}
+
 
 if __name__ == "__main__":
 
     load_dotenv()
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=True)
 

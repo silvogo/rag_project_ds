@@ -4,7 +4,6 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, CharacterTextSplitter
 
 
-
 def load_and_chunk(file_path:str, chunk_size:int, chunk_overlap:int) -> List[Document]:
     # load the file as csv
     loader = CSVLoader(file_path=file_path, encoding='utf-8')

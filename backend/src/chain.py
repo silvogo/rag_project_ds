@@ -4,7 +4,7 @@ from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
 
 from langchain_core.output_parsers import StrOutputParser
-from src.retriever import  get_vector_store
+from backend.src.retriever import  get_vector_store
 
 # get vector store
 vector_store = get_vector_store()

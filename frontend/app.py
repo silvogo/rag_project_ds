@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 import streamlit as st
 
-from frontend.chat_ui import display_chat
+from frontend.chat_ui import display_chat, display_bar_upload_doc
 
 # Definining the title of the APP
 st.title("RAG Customer Satisfaction Chatbot")
@@ -17,6 +17,7 @@ if "messages" not in st.session_state:
 if "session_id" not in st.session_state:
     st.session_state.session_id = None
 
-
+# Display sidebar
+display_bar_upload_doc()
 # Display chat
 display_chat()
