@@ -1,7 +1,7 @@
 import streamlit as st
 from click import prompt
 
-from frontend.api_utils import get_api_response
+from frontend.api_utils import get_api_response, upload_file
 
 
 def display_chat():
@@ -34,4 +34,15 @@ def display_chat():
                 # Display the assistant message in chat UI
                 with st.chat_message("assistant"):
                     st.markdown(answer)
+            else:
+                st.error("Error when getting response from the API.")
 
+
+def display_bar_upload_doc():
+    # Sidebar to upload documents
+    st.sidebar.header("Upload Document")
+    uploaded_file = st.sidebar.file_uploader("Choose a type of file", type=['csv', 'xls'])
+    if uploaded_file is not None:
+        if st.sidebar.button("Upload"):
+            with st.spinner("Uploading file..."):
+                upload_response = upload_file(uploaded_file)
