@@ -85,6 +85,8 @@ def initialize_vector_store_indexed(embeddings, index_path = FAISS_INDEX_PATH, i
 
 
     # Initialize the FAISS vector store
+    # In the future explore other options like IVFFlat (Inverted File Index Flat)
+    # or IVFPQ (Inverted File with Product Quantization)
     vector_store = FAISS(
         embedding_function=embeddings,
         index=index,
@@ -123,6 +125,41 @@ def index_document_to_faiss (chunks, file_id):
         print(f"Error indexing document: {e}")
         return False
 
+def delete_doc_from_faiss(file_id: int):
+    global _vector_store
+
+    try:
+        if _vector_store is None:
+            _vector_store = get_vector_store()
+
+        print("Deleting from FAIIS")
+
+        # declare documents to delete
+        doc_ids_to_delete = []
+
+        # Iterate over stored document IDs
+        for doc_id in _vector_store.docstore._dict:  # Access stored document IDs
+            doc = _vector_store.docstore.search(doc_id)  # Fetch the document
+
+            if doc and "file_id" in doc.metadata and doc.metadata["file_id"] == file_id:
+                doc_ids_to_delete.append(doc_id)
+
+        if not doc_ids_to_delete:
+            print(f"No documents found for file_id {file_id}")
+            return False
+
+
+        # delete from faiss index and docstore
+        _vector_store.delete(doc_ids_to_delete)
+        # Persist changes to disk
+        save_vector_store(_vector_store)
+
+        return True
+
+    except Exception as e:
+        print(f"Error deleting document with file_id {file_id} from FAISS: {str(e)}")
+        return False
+
 
 def get_vector_store():
     """
@@ -136,6 +173,53 @@ def get_vector_store():
         _vector_store = initialize_vector_store_indexed(embeddings=embeddings)
     return _vector_store
 
-# load environment variables
+def get_retriever(vector_store, search_type=None, k=5 , lambda_mult=0.5, fetch_k=None, score_threshold=None):
+    """
+        Returns a retriever based on the search type.
+
+        Args:
+            vector_store: FAISS vector store.
+            search_type (str): The type of retrieval. Options: 'mmr', 'similarity_score_threshold', or None (default L2).
+            k (int): Number of results to return.
+            lambda_mult (float): Balances relevance & diversity for MMR. Default 0.5.
+            fetch_k (int): Number of documents to fetch initially in MMR.
+            score_threshold (float): Minimum similarity score for similarity_score_threshold search.
+
+        Returns:
+            retriever: Configured retriever.
+    """
+
+    if search_type is None:
+        # Default FAISS similarity search - L2 distance
+
+        faiss.normalize_L2(vector_store.index) # ensure cosine similarity if needed
+        retriever = vector_store.as_retriever(
+            search_kwargs ={"k": k}
+        )
+
+    # using maximum marginal relevance algorith
+    elif search_type == 'mmr':
+        if fetch_k is None:
+            fetch_k = k * 10 # Default: Fetch more documents for reranking
+
+        retriever = vector_store.as_retriever(
+            search_type= search_type,
+            search_kwargs={"k": k, 'lambda_mult': lambda_mult, "fetch_k": fetch_k}
+        )
+
+    elif search_type == 'similarity_score_threshold':
+        if score_threshold is None:
+            raise ValueError("score_threshold must be specified for similarity_score_threshold")
+        retriever = vector_store.as_retriever(
+            search_type = search_type,
+            search_kwargs={"k": k, "score_threshold": score_threshold}
+        )
+    else:
+        raise ValueError(f"Unknown search_type: {search_type}. Use 'mmr', 'similarity_score_threshold' or do not specify ")
+
+
+    return retriever
+
 load_dotenv()
+
 

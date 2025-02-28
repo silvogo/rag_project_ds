@@ -4,12 +4,12 @@ from langchain.chains import create_retrieval_chain
 from langchain_core.prompts import ChatPromptTemplate
 
 from langchain_core.output_parsers import StrOutputParser
-from backend.src.retriever import  get_vector_store
+from backend.src.retriever import get_vector_store, get_retriever
 
 # get vector store
 vector_store = get_vector_store()
 # create a retriever based in vector store
-retriever = vector_store.as_retriever(search_kwargs={"k": 2})
+retriever = get_retriever(vector_store, search_type='mmr', k=5 , lambda_mult=0.5)
 
 
 # Define the prompt for question answering
