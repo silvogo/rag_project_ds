@@ -1,5 +1,9 @@
 import sqlite3
 
+from aiohttp.hdrs import PRAGMA
+
+from backend.src.pydantic_models import DocumentInfo
+
 DBNAME = 'rag_ds_app.db'
 
 def get_db_connection():
@@ -16,7 +20,7 @@ def create_document_table():
         '''
         CREATE TABLE IF NOT EXISTS document_data (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        document_name TEXT,
+        filename TEXT,
         upload_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
         '''
     )
@@ -53,10 +57,10 @@ def insert_application_logs(session_id, user_query, model_response, model):
     conn.close()
 
 
-def insert_document_record(document_name):
+def insert_document_record(filename):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO document_data (document_name) VALUES (?)', (document_name))
+    cursor.execute('INSERT INTO document_data (filename) VALUES (?)', (filename,))
     # captures the id of the last inserted document
     document_id = cursor.lastrowid
     conn.commit()
@@ -66,23 +70,41 @@ def insert_document_record(document_name):
 
 def delete_document_record(file_id):
     conn = get_db_connection()
-    conn.execute('DELETE FROM document_store WHERE id = ?', (file_id,))
+    conn.execute('DELETE FROM document_data WHERE id = ?', (file_id,))
     conn.commit()
     conn.close()
     return True
-
-
 
 def get_all_documents():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT id, filename, upload_timestamp FROM document_data ORDER BY upload_timestamp desc')
+    rows = cursor.fetchall()
+    conn.close()
+
+    documents = [DocumentInfo(id=row['id'],
+                              filename=row['filename'],
+                              upload_timestamp=row['upload_timestamp']) for row in rows]
+    return documents
+
+def get_chat_history(session_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT FROM app_logs WHERE session_id = ? ORDER BY created_at', (session_id))
+    logs = cursor.fetchall()
+
+    messages = []
+    for row in logs:
+        messages.extend([
+            {"role": "human", "content": row["user_query"]},
+            {"role": "ai", "content": row["model_response"]}
+        ])
+    conn.close()
+    return messages
 
 # init database
 create_app_logs()
 create_document_table()
-
-
 
 
 

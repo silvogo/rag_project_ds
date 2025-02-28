@@ -10,19 +10,9 @@ class ModelName(str, Enum):
 
 class QueryInput(BaseModel):
     question: str
-    session_id: Optional[str] = Field(default=None,
-                                      description="Optional session ID")
+    session_id: str = Field(default=None)
     model: ModelName = Field(default=ModelName.GPT4_O_MINI)
 
-    # defines what json structure of the model should apear in Swagger's example request
-    class Config:
-        json_schema_extra = {
-            "example":{
-                "question": "What is the nps score?",
-                "session_id": None,
-                "model": "gpt-4o-mini"
-            }
-        }
 
 
 class QueryResponse(BaseModel):
@@ -34,3 +24,6 @@ class DocumentInfo(BaseModel):
     id: int
     filename: str
     upload_timestamp: datetime
+
+class DeleteFileRequest(BaseModel):
+    file_id:int

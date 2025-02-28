@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "01e800eb799a939658a2c00401e81c08ef0c50792dfd09c60f3a469341f06f56"
+            "sha256": "b6b4fd02b9469cad00e1c4b407bee435b7bd83b91959ff3363045e6163582beb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -169,6 +169,15 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
             "version": "==0.4.6"
+        },
+        "deepl": {
+            "hashes": [
+                "sha256:f9cb882b2cee4b0a28bc648e5af27f357e5e8ad5dad1d4a40cb23c754c2be628",
+                "sha256:fae768ba0cafbfcc7de3fcec58e2eafd45d0c917df9385f9bde2126968c35a9e"
+            ],
+            "index": "pypi",
+            "markers": "python_full_version >= '3.6.2' and python_version < '4'",
+            "version": "==1.21.0"
         },
         "gitdb": {
             "hashes": [

@@ -5,11 +5,11 @@ from frontend.api_utils import get_api_response, upload_file
 
 
 def display_chat():
-
+    # Iterate through each message stored in the session state
     for msg in st.session_state.messages:
-        # creates a chat bubble
+        # Create a chat message container for the given role (e.g., user or assistant)
         with st.chat_message(msg["role"]) :
-            # displays the actual message text inside the bubble
+            # Display the content of the message as markdown
             st.markdown(msg["content"])
 
     # create prompt chat
